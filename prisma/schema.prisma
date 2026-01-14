@@ -1,0 +1,67 @@
+// Schemat bazy danych dla komunikatora
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Uzytkownik {
+  id            String        @id @default(cuid())
+  login         String        @unique
+  haslo         String
+  email         String?       @unique
+  nazwaWyswietlana String?
+  utworzonyO    DateTime      @default(now())
+  wiadomosci    Wiadomosc[]
+  czlonkostwaPokoj CzlonekPokoju[]
+  pliki         Plik[]
+}
+
+model Pokoj {
+  id            String        @id @default(cuid())
+  nazwa         String
+  opis          String?
+  czyPubliczny  Boolean       @default(true)
+  utworzonyO    DateTime      @default(now())
+  wiadomosci    Wiadomosc[]
+  czlonkowie    CzlonekPokoju[]
+}
+
+model CzlonekPokoju {
+  id            String      @id @default(cuid())
+  uzytkownikId  String
+  pokojId       String
+  dolaczonoO    DateTime    @default(now())
+  uzytkownik    Uzytkownik  @relation(fields: [uzytkownikId], references: [id], onDelete: Cascade)
+  pokoj         Pokoj       @relation(fields: [pokojId], references: [id], onDelete: Cascade)
+
+  @@unique([uzytkownikId, pokojId])
+}
+
+model Wiadomosc {
+  id            String      @id @default(cuid())
+  tresc         String
+  uzytkownikId  String
+  pokojId       String
+  utworzonaO    DateTime    @default(now())
+  uzytkownik    Uzytkownik  @relation(fields: [uzytkownikId], references: [id], onDelete: Cascade)
+  pokoj         Pokoj       @relation(fields: [pokojId], references: [id], onDelete: Cascade)
+  pliki         Plik[]
+}
+
+model Plik {
+  id            String      @id @default(cuid())
+  nazwaPliku    String
+  sciezka       String
+  rozmiar       Int
+  typMime       String
+  wiadomoscId   String
+  uzytkownikId  String
+  przeslanoO    DateTime    @default(now())
+  wiadomosc     Wiadomosc   @relation(fields: [wiadomoscId], references: [id], onDelete: Cascade)
+  uzytkownik    Uzytkownik  @relation(fields: [uzytkownikId], references: [id], onDelete: Cascade)
+}
