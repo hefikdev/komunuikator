@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Send, LogOut, Users, Plus, Smile, Paperclip } from 'lucide-react'
+import { EMOTIKONY, LIMITY, WIADOMOSCI } from '@/lib/constants'
 
 interface Uzytkownik {
   uzytkownikId: string
@@ -37,7 +38,7 @@ interface Plik {
   rozmiar: number
 }
 
-const EMOTIKONY = ['😀', '😂', '😍', '👍', '❤️', '🎉', '🔥', '💯', '😎', '🤔', '👏', '🙏']
+const INTERWAL_ODSWIEZANIA = LIMITY.INTERWAL_ODSWIEZANIA
 
 export default function InterfejsCzatu({ uzytkownik }: { uzytkownik: Uzytkownik }) {
   const [pokoje, setPokoje] = useState<Pokoj[]>([])
@@ -59,7 +60,7 @@ export default function InterfejsCzatu({ uzytkownik }: { uzytkownik: Uzytkownik 
       if (wybranyPokoj) {
         pobierzWiadomosci(wybranyPokoj)
       }
-    }, 2000) // Odświeżanie co 2 sekundy
+    }, INTERWAL_ODSWIEZANIA)
     return () => clearInterval(interval)
   }, [wybranyPokoj])
 
@@ -108,7 +109,7 @@ export default function InterfejsCzatu({ uzytkownik }: { uzytkownik: Uzytkownik 
         const formData = new FormData()
         formData.append('plik', wybranyPlik)
         formData.append('pokojId', wybranyPokoj)
-        formData.append('tresc', nowaWiadomosc.trim() || 'Wysłano plik')
+        formData.append('tresc', nowaWiadomosc.trim() || WIADOMOSCI.PLIK_WYSLANY)
 
         const odpowiedz = await fetch('/api/pliki', {
           method: 'POST',
@@ -400,7 +401,7 @@ export default function InterfejsCzatu({ uzytkownik }: { uzytkownik: Uzytkownik 
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-muted-foreground">Wybierz pokój, aby rozpocząć czat</p>
+            <p className="text-muted-foreground">{WIADOMOSCI.BRAK_POKOJU}</p>
           </div>
         )}
       </div>

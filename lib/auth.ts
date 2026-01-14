@@ -1,7 +1,12 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
+import { WALIDACJA } from './constants'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'domyslny-sekret-zmien-w-produkcji'
+const JWT_SECRET = process.env.JWT_SECRET
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET nie jest zdefiniowany w zmiennych środowiskowych')
+}
 
 export interface TokenPayload {
   uzytkownikId: string
@@ -17,10 +22,16 @@ export async function sprawdzHaslo(haslo: string, hash: string): Promise<boolean
 }
 
 export function generujToken(payload: TokenPayload): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET nie jest zdefiniowany')
+  }
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
 }
 
 export function weryfikujToken(token: string): TokenPayload | null {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET nie jest zdefiniowany')
+  }
   try {
     return jwt.verify(token, JWT_SECRET) as TokenPayload
   } catch {
@@ -41,10 +52,10 @@ export function sanityzujTekst(tekst: string): string {
 
 // Walidacja nazwy użytkownika
 export function walidujLogin(login: string): boolean {
-  return /^[a-zA-Z0-9_]{3,20}$/.test(login)
+  return WALIDACJA.REGEX_LOGIN.test(login)
 }
 
 // Walidacja hasła
 export function walidujHaslo(haslo: string): boolean {
-  return haslo.length >= 6
+  return haslo.length >= WALIDACJA.MIN_DLUGOSC_HASLA
 }

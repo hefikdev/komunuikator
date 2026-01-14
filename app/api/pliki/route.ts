@@ -4,19 +4,10 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { prisma } from '@/lib/prisma'
 import { weryfikujToken, sanityzujTekst } from '@/lib/auth'
+import { DOZWOLONE_TYPY_PLIKOW, LIMITY, WIADOMOSCI } from '@/lib/constants'
 
-const DOZWOLONE_TYPY = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'application/pdf',
-  'text/plain',
-  'application/zip',
-  'application/x-zip-compressed',
-]
-
-const MAX_ROZMIAR = 10 * 1024 * 1024 // 10MB
+const DOZWOLONE_TYPY = [...DOZWOLONE_TYPY_PLIKOW]
+const MAX_ROZMIAR = LIMITY.MAX_ROZMIAR_PLIKU
 
 export async function POST(request: Request) {
   try {
@@ -101,10 +92,11 @@ export async function POST(request: Request) {
     const bytes = await plik.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Generuj unikalną nazwę pliku
+    // Generuj bezpieczną, losową nazwę pliku
     const timestamp = Date.now()
-    const bezpiecznaNazwa = plik.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-    const nazwaPliku = `${timestamp}_${bezpiecznaNazwa}`
+    const randomString = Math.random().toString(36).substring(2, 15)
+    const extension = plik.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'bin'
+    const nazwaPliku = `${timestamp}_${randomString}.${extension}`
     const sciezka = join(process.cwd(), 'public', 'uploads', nazwaPliku)
 
     // Upewnij się że katalog istnieje
@@ -113,7 +105,7 @@ export async function POST(request: Request) {
     await writeFile(sciezka, buffer)
 
     // Sanityzacja treści wiadomości
-    const bezpiecznaTresc = tresc ? sanityzujTekst(tresc.trim()) : 'Wysłano plik'
+    const bezpiecznaTresc = tresc ? sanityzujTekst(tresc.trim()) : WIADOMOSCI.PLIK_WYSLANY
 
     // Utwórz wiadomość z plikiem
     const nowaWiadomosc = await prisma.wiadomosc.create({

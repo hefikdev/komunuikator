@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { weryfikujToken, sanityzujTekst } from '@/lib/auth'
+import { LIMITY } from '@/lib/constants'
 
 export async function GET(request: Request) {
   try {
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
       orderBy: {
         utworzonaO: 'asc',
       },
-      take: 100, // Ostatnie 100 wiadomości
+      take: LIMITY.MAX_WIADOMOSCI, // Ostatnie wiadomości
     })
 
     return NextResponse.json({ wiadomosci })
